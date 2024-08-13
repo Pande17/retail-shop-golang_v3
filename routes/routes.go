@@ -16,8 +16,8 @@ func RouteSetup(r *fiber.App) {
 	// retailGroup.Get("/",)
 
 	// Define routes barang
-	retailGroup.Get("/barang", BarangHandler)
-	retailGroup.Get("/keranjang", controller.KeranjangList) // ==== untuk keranjang, jangan lupa buat func
+	retailGroup.Get("/barang", controller.GetBarang)
+	// retailGroup.Get("/keranjang", controller.KeranjangList)  ==== untuk keranjang, jangan lupa buat func
 	retailGroup.Get("/barang/:id", controller.GetBarangByID)
 	retailGroup.Post("/barang", controller.CreateBarang)
 	retailGroup.Put("/barang/:id", controller.UpdateBarang)
@@ -25,7 +25,7 @@ func RouteSetup(r *fiber.App) {
 	retailGroup.Delete("/barang/:id", controller.DeleteBarang)
 
 	// Define routes penjualan
-	retailGroup.Get("/admin/penjualan", PenjualanHandler)
+	retailGroup.Get("/admin/penjualan", controller.GetPenjualan)
 	retailGroup.Get("/admin/penjualan/:id", controller.GetPenjualanByID)
 	retailGroup.Post("/penjualan", controller.InsertPenjualanData)
 
@@ -37,16 +37,16 @@ func RouteSetup(r *fiber.App) {
 	retailGroup.Put("/admin/kode-diskon/:id", controller.UpdateCode)
 	retailGroup.Delete("/admin/kode-diskon/:id", controller.DeleteKode)
 
-	retailGroup.Get("/test", func(c *fiber.Ctx) error {
-		return c.Render("test", fiber.Map{
-			"title": "Test Page",
-		})
-	})
+	// retailGroup.Get("/test", func(c *fiber.Ctx) error {
+	// 	return c.Render("test", fiber.Map{
+	// 		"title": "Test Page",
+	// 	})
+	// })
 
 	retailGroup.Get("/admin/dashboard", controller.AdminGetBarang)
 
-	retailGroup.Get("/checkout", func(c *fiber.Ctx) error {
-		return nil
-	})
+	// retailGroup.Get("/checkout", func(c *fiber.Ctx) error {
+	// 	return nil
+	// })
 
 }
