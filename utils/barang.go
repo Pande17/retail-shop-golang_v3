@@ -6,7 +6,6 @@ import (
 	repository "projek/toko-retail/repository/config"
 	"projek/toko-retail/repository/modelfunc"
 	"strconv"
-	"time"
 )
 
 // function untuk membuat data barang baru
@@ -17,8 +16,8 @@ func CreateBarang(data model.Barang) (model.CreateB, error) {
 	}
 
 	// Set timestamps and default CreatedBy if not provided
-	repoBarang.CreatedAt = time.Now()
-	repoBarang.UpdatedAt = time.Now()
+	// repoBarang.CreatedAt = time.Now()
+	// repoBarang.UpdatedAt = time.Now()
 	if repoBarang.CreatedBy == "" {
 		repoBarang.CreatedBy = "SYSTEM"
 	}
@@ -97,8 +96,8 @@ func GetBarangByID(id uint64) (model.Details, error) {
 		HargaJual:  barangModel.HargaJual,
 		TipeBarang: barangModel.TipeBarang,
 		Stok:       barangModel.Stok,
-		Model:      barangModel.Model,
-		Histori:    histori,
+		// Model:      barangModel.Model,
+		Histori: histori,
 	}
 	return details, nil
 }
@@ -114,8 +113,8 @@ func UpdateBarang(id uint, barang model.Barang) (model.Barang, error) {
 			HargaJual:  barang.HargaJual,
 			TipeBarang: barang.TipeBarang,
 			Stok:       barang.Stok,
-			Model:      barang.Model,
-			CreatedBy:  barang.CreatedBy,
+			// Model:      barang.Model,
+			CreatedBy: barang.CreatedBy,
 		},
 	}
 	err := repoBarang.Update(repository.Mysql.DB)
@@ -128,7 +127,7 @@ func DeleteBarang(id uint64) error {
 			ID: id,
 		},
 	}
-		return barang.Delete(repository.Mysql.DB)
+	return barang.Delete(repository.Mysql.DB)
 }
 
 // {

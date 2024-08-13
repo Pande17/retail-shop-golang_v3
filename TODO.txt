@@ -1,12 +1,13 @@
 yang kurang :
 
-1. UI (website) [80%]
-2. Penjualan [DONE]
-3. Historis [DONE]
+1. UI WEBSITE BATAL😂
+2. Barang [POST error]
+3. Penjualan [DONE 100%]
+4. Kode Diskon [DONE 100%]
 4. Update stok [DONE]
-5. (detail kode diskon)Get-By-Code [error lagi ANJJJ]
-6. Detaild []
+5. 
+6. 
 7. Note: index.html navbar nya udah bener, yang lain belum
     Perbaiki tampilannya biar rapi, ga perlu responsif
-8. method postnya error semua cik
+8. 
 Server Error😂

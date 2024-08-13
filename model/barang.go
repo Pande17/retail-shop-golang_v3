@@ -8,7 +8,7 @@ type Barang struct {
 	HargaJual  float64 `json:"harga_jual"`
 	TipeBarang string  `json:"tipe_barang"`
 	Stok       uint    `json:"stok"`
-	Model
+	// Model
 	CreatedBy string `json:"created_by"`
 }
 
@@ -36,4 +36,3 @@ type CreateB struct {
 	CreatedBy  string       `json:"created_by"`
 	Histori    []HistoriASK `gorm:"foreignKey:ID_Barang" json:"histori_stok"`
 }
-

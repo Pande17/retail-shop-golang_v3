@@ -31,6 +31,7 @@ func CreateBarang(c *fiber.Ctx) error {
 				"message": "Invalid Body",
 			})
 	}
+	logrus.Info("Parsed request body successfully: ", req)
 
 	barang, errCreateBarang := utils.CreateBarang(model.Barang{
 		KodeBarang: req.Kode,
@@ -41,6 +42,14 @@ func CreateBarang(c *fiber.Ctx) error {
 		Stok:       req.Stok,
 		CreatedBy:  req.CreatedBy,
 	})
+
+	if errCreateBarang != nil {
+		logrus.Printf("Terjadi error : %s\n", errCreateBarang.Error())
+		return c.Status(fiber.StatusInternalServerError).
+			JSON(map[string]any{
+				"message": "Server Error",
+			})
+	}
 
 	utils.CreateHistoriBarang(&model.Details{
 		ID:         barang.ID,
@@ -67,15 +76,29 @@ func CreateBarang(c *fiber.Ctx) error {
 			"id":          barang.ID,
 			"kode_barang": barang.KodeBarang,
 		})
+	// return c.Status(fiber.StatusOK).JSON(
+	// 	map[string]any{
+	// 		"message": "tes",
+	// 	},
+	// )
 }
 
-func GetBarang(c *fiber.Ctx) ([]model.Barang, error) {
+func GetBarang(c *fiber.Ctx) error {
 	dataBarang, err := utils.GetBarang()
 	if err != nil {
 		logrus.Error("Gagal dalam mengambil list Barang: ", err.Error())
-		return nil, err
+		return c.Status(fiber.StatusInternalServerError).JSON(
+			map[string]any{
+				"message": "server error",
+			},
+		)
 	}
-	return dataBarang, nil
+	return c.Status(fiber.StatusOK).JSON(
+		map[string]any{
+			"data":    dataBarang,
+			"message": "Success Get All Barang",
+		},
+	)
 }
 
 func GetJSONBarang(c *fiber.Ctx) error {
