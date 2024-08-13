@@ -48,3 +48,11 @@ func (pj *Penjualan) Update(db *gorm.DB) error {
 	}
 	return nil
 }
+
+func (pj *Penjualan) UpdateKodeInvoice(db *gorm.DB) error {
+	err := db.Model(Penjualan{}).Where("id = ?", pj.ID).Updates(&pj).Error
+	if err != nil {
+		return err
+	}
+	return nil
+}

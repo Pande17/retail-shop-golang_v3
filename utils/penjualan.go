@@ -42,15 +42,24 @@ func InsertPenjualanData(data model.Penjualan) (model.Penjualan, error) {
 		data.Total = data.Subtotal
 	}
 
-	// masukkan generate invoice
-	data.Kode_invoice = GenerateInvoice(data.ID)
-
-	// convert model.Penjualan to modelfunc.Penjualan
+	// convert model.Penjualan ke modelfunc.Penjualan
 	penjualan := modelfunc.Penjualan{
 		Penjualan: data,
 	}
 
+	// simpan data penjualan ke DB untuk mendapatkan ID yang di-generate di DB
 	err := penjualan.CreatePenjualan(repository.Mysql.DB)
+	if err != nil {
+		return data, err
+	}
+
+	// generate kode invoice setelah data penjualan tersimpan
+	data.ID = penjualan.Penjualan.ID
+	data.Kode_invoice = GenerateInvoice(data.ID)
+
+	// perbarui data penjualan dengan kode invoice yang baru di-generate
+	penjualan.Penjualan.Kode_invoice = data.Kode_invoice
+	err = penjualan.Update(repository.Mysql.DB)
 	if err != nil {
 		return data, err
 	}
@@ -63,10 +72,10 @@ func InsertPenjualanData(data model.Penjualan) (model.Penjualan, error) {
 	return penjualan.Penjualan, nil
 }
 
-//  function untuk mendapatkan data penjualan
+// function untuk mendapatkan data penjualan
 func GetPenjualan() ([]model.Penjualan, error) {
-		var penjualan modelfunc.Penjualan
-		penjualanList, err := penjualan.GetAll(repository.Mysql.DB)
+	var penjualan modelfunc.Penjualan
+	penjualanList, err := penjualan.GetAll(repository.Mysql.DB)
 	if err != nil {
 		return nil, err
 	}

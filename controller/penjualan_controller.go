@@ -48,14 +48,14 @@ func InsertPenjualanData(c *fiber.Ctx) error {
 	if errInsertPenjualan != nil {
 		logrus.Printf("Terjadi error : %s\n", errInsertPenjualan.Error())
 		return c.Status(fiber.StatusInternalServerError).
-			JSON(map[string]interface{}{
+			JSON(map[string]any{
 				"message": "Server Error",
 			})
 	}
 
 	return c.Status(fiber.StatusOK).
-		JSON(map[string]interface{}{
-			"message": "Berhasil Menambahkan Barang",
+		JSON(map[string]any{
+			"message": "Berhasil Menambahkan Penjualan",
 		})
 }
 
@@ -64,7 +64,7 @@ func GetPenjualan(c *fiber.Ctx) error {
 	if err != nil {
 		logrus.Error("Gagal dalam mengambil list penjualan :", err.Error())
 		return c.Status(fiber.StatusInternalServerError).JSON(
-			map[string]interface{}{
+			map[string]any{
 				"message": "Server Error",
 			},
 		)
@@ -77,6 +77,7 @@ func GetPenjualan(c *fiber.Ctx) error {
 	return c.Status(fiber.StatusOK).JSON(
 		map[string]any{
 			"penjualan": dataPenjualan,
+			"message":   "Success Get All Penjualan",
 		},
 	)
 }
