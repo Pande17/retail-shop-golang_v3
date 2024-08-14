@@ -10,21 +10,25 @@ type Barang struct {
 	model.Barang
 }
 
+// ini yang dulu di line 17 (bikin error)
+// db.Model(model.Barang{})
+// .Create(&br).Error
+
 func (br *Barang) Create(db *gorm.DB) error {
-	err := db.Model(model.Barang{}).Create(&br).Error
-	if err != nil {
-		return err
-	}
-	return nil
+	// err := db.Model(model.Barang{})
+	if err := db.Create(br).Error; err != nil {
+        return err
+    }
+    return nil
 }
 
 func (br *Barang) GetAll(db *gorm.DB) ([]model.Barang, error) {
 	res := []model.Barang{}
 	err := db.Model(model.Barang{}).Find(&res).Error
 	if err != nil {
-		return res, err
+		return []model.Barang{}, err
 	}
-	return res, nil
+	return res, err
 }
 
 func (br *Barang) GetByID(db *gorm.DB) (model.Barang, error) {

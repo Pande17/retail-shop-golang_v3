@@ -25,15 +25,16 @@ func CreateBarang(c *fiber.Ctx) error {
 		} `json:"histori_stok"`
 	}
 	req := new(AddBarangReq)
+
 	if err := c.BodyParser(req); err != nil {
 		return c.Status(fiber.StatusBadRequest).
-			JSON(map[string]any{
+			JSON(map[string]interface{}{
 				"message": "Invalid Body",
 			})
 	}
-	logrus.Info("Parsed request body successfully: ", req)
+	// logrus.Info("Parsed request body successfully: ", req)
 
-	barang, errCreateBarang := utils.CreateBarang(model.Barang{
+	barang := model.Barang{
 		KodeBarang: req.Kode,
 		Nama:       req.Nama,
 		HargaPokok: req.HargaPokok,
@@ -41,17 +42,58 @@ func CreateBarang(c *fiber.Ctx) error {
 		TipeBarang: req.Tipe,
 		Stok:       req.Stok,
 		CreatedBy:  req.CreatedBy,
-	})
+	}
 
+	_, errCreateBarang := utils.CreateBarang(barang)
 	if errCreateBarang != nil {
-		logrus.Printf("Terjadi error : %s\n", errCreateBarang.Error())
+		logrus.Errorf("Terjadi error: %s\n", errCreateBarang)
 		return c.Status(fiber.StatusInternalServerError).
-			JSON(map[string]any{
+			JSON(map[string]interface{}{
 				"message": "Server Error",
 			})
 	}
+	// barang, errCreateBarang := utils.CreateBarang(model.Barang{
+	// 	KodeBarang: req.Kode,
+	// 	Nama:       req.Nama,
+	// 	HargaPokok: req.HargaPokok,
+	// 	HargaJual:  req.HargaJual,
+	// 	TipeBarang: req.Tipe,
+	// 	Stok:       req.Stok,
+	// 	CreatedBy:  req.CreatedBy,
+	// })
 
-	utils.CreateHistoriBarang(&model.Details{
+	// if errCreateBarang != nil {
+	// 	logrus.Printf("Terjadi error : %s\n", errCreateBarang.Error())
+	// 	return c.Status(fiber.StatusInternalServerError).
+	// 		JSON(map[string]any{
+	// 			"message": "Server Error",
+	// 		})
+	// }
+
+	_, errCreateASK := utils.GetASK(barang.ID)
+	if errCreateASK != nil {
+		logrus.Errorf("Error getting ASK: %s", errCreateASK)
+		return c.Status(fiber.StatusInternalServerError).JSON(
+			map[string]interface{}{
+				"message": "Server Error",
+			},
+		)
+	}
+
+	if req.Histori.Amount == 0 && req.Histori.Status == "" && req.Histori.Keterangan == "" {
+		logrus.Error("Error: Histori is empty")
+		return c.Status(fiber.StatusBadRequest).JSON(map[string]interface{}{
+			"message": "Invalid Histori Data",
+		})
+	}
+
+	histori := model.HistoriASKM{
+		Amount:     int(req.Histori.Amount),
+		Status:     req.Histori.Status,
+		Keterangan: req.Histori.Keterangan,
+	}
+
+	_, errCreateHistori := utils.CreateHistoriBarang(&model.Details{
 		ID:         barang.ID,
 		KodeBarang: req.Kode,
 		Nama:       req.Nama,
@@ -60,21 +102,21 @@ func CreateBarang(c *fiber.Ctx) error {
 		TipeBarang: req.Tipe,
 		Stok:       req.Stok,
 		CreatedBy:  req.CreatedBy,
-		Histori:    []model.HistoriASKM{},
+		Histori:    []model.HistoriASKM{histori},
 	}, req.Histori.Keterangan, int(req.Stok), req.Histori.Status)
 
-	if errCreateBarang != nil {
-		logrus.Printf("Terjadi error : %s\n", errCreateBarang.Error())
+	if errCreateHistori != nil {
+		logrus.Errorf("Error creating histori: %s", errCreateHistori)
 		return c.Status(fiber.StatusInternalServerError).
-			JSON(map[string]any{
+			JSON(map[string]interface{}{
 				"message": "Server Error",
 			})
 	}
 
 	return c.Status(fiber.StatusOK).
-		JSON(map[string]any{
-			"id":          barang.ID,
-			"kode_barang": barang.KodeBarang,
+		JSON(map[string]interface{}{
+			"message": "Successfully added item",
+			"data":    barang,
 		})
 	// return c.Status(fiber.StatusOK).JSON(
 	// 	map[string]any{
@@ -128,17 +170,19 @@ func AdminGetBarang(c *fiber.Ctx) error {
 			},
 		)
 	}
-	return c.Render("admin/dashboard", fiber.Map{
-		"data":  dataBarang,
-		"title": "Daftar Barang",
-	})
+	return c.Status(fiber.StatusOK).JSON(
+		map[string]any{
+			"data":  dataBarang,
+			"title": "Daftar Barang",
+		},
+	)
 }
 
 func GetBarangByID(c *fiber.Ctx) error {
 	barangID, err := strconv.Atoi(c.Params("id"))
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(
-			map[string]any{
+			map[string]interface{}{
 				"message": "Invalid ID",
 			},
 		)
@@ -148,16 +192,23 @@ func GetBarangByID(c *fiber.Ctx) error {
 	if err != nil {
 		if err.Error() == "record not found" {
 			return c.Status(fiber.StatusNotFound).JSON(
-				map[string]any{
+				map[string]interface{}{
 					"message": "ID not found",
 				},
 			)
 		}
+
+		return c.Status(fiber.StatusInternalServerError).JSON(
+			map[string]interface{}{
+				"message": "Server Error",
+			},
+		)
 	}
 
 	return c.Status(fiber.StatusOK).JSON(
-		map[string]any{
-			"data": dataBarang,
+		map[string]interface{}{
+			"data":    dataBarang,
+			"message": "Success",
 		},
 	)
 }

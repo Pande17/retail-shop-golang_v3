@@ -1,13 +1,12 @@
 yang kurang :
 
 1. UI WEBSITE BATAL😂
-2. Barang [POST error]
+2. Barang [Get All : AMAN,
+    Get Detail By ID : created_at dan updated_at ga bener,
+    POST : udah mau kepost, tapi histori_stok nya ga kepost,
+
+]
 3. Penjualan [DONE 100%]
 4. Kode Diskon [DONE 100%]
-4. Update stok [DONE]
-5. 
-6. 
-7. Note: index.html navbar nya udah bener, yang lain belum
-    Perbaiki tampilannya biar rapi, ga perlu responsif
-8. 
+
 Server Error😂

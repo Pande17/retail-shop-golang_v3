@@ -8,22 +8,38 @@ import (
 
 // function untuk membuat histori barang
 func CreateHistoriBarang(p *model.Details, keterangan string, amount int, status string) (model.Histori, error) {
-	histori := modelfunc.Histori{
-		Histori: model.Histori{
-			ID_barang:   uint(p.ID),
-			Amount:      amount,
-			Status:      status,
-			Keterangan:  keterangan,
-		},
+// Membuat objek histori
+	histori := model.Histori{
+		ID_barang:   uint(p.ID),
+		Amount:     amount,
+		Status:     status,
+		Keterangan: keterangan,
 	}
 
-	// Save the history record to the database
-	err := histori.Create(repository.Mysql.DB)
+	// Simpan histori ke database
+	err := repository.Mysql.DB.Create(&histori).Error
 	if err != nil {
 		return model.Histori{}, err
 	}
 
-	return histori.Histori, nil
+	return histori, nil
+
+	// histori := modelfunc.Histori{
+	// 	Histori: model.Histori{
+	// 		ID_barang:   uint(p.ID),
+	// 		Amount:      amount,
+	// 		Status:      status,
+	// 		Keterangan:  keterangan,
+	// 	},
+	// }
+
+	// // Save the history record to the database
+	// err := histori.Create(repository.Mysql.DB)
+	// if err != nil {
+	// 	return model.Histori{}, err
+	// }
+
+	// return histori.Histori, nil
 }
 
 // function untuk membuat histori penjualan
