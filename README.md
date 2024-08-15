@@ -2,6 +2,10 @@
 
 The "Toko Retail" project is a Go (Golang) application designed to manage the operations of a retail store. It includes various functionalities such as handling inventory, processing sales, managing discounts, and maintaining historical records. The project uses the GORM library for interacting with a MySQL database, allowing for efficient data management and retrieval.
 
+DB Design:
+
+![DB DESIGN](resources/DB-Design-Retail.png)
+
 ## Key Features:
 ### Inventory Management:
 
