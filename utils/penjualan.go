@@ -8,97 +8,92 @@ import (
 	"time"
 )
 
-// function untuk buat kode invoice secara otomatis
+// Function to generate an invoice code automatically
 func GenerateInvoice(id uint64) string {
-	invoice := fmt.Sprintf("INV/%d", id)
+	invoice := fmt.Sprintf("INV/%d", id) // Format the invoice code with the given ID
 	return invoice
 }
 
-// function untuk memasukkan data penjualan ke DB
+// Function to insert sales data into the database
 func InsertPenjualanData(data model.Penjualan) (model.Penjualan, error) {
-	data.CreatedAt = time.Now()
-	data.UpdatedAt = time.Now()
+	data.CreatedAt = time.Now() // Set the creation timestamp
+	data.UpdatedAt = time.Now() // Set the update timestamp
 
-	// mendapatkan diskon berdasarkan kode diskon
+	// Get the discount based on the discount code
 	if data.Kode_diskon != "" {
-		diskon, err := GetDiskonByCode(data.Kode_diskon)
+		diskon, err := GetDiskonByCode(data.Kode_diskon) // Retrieve discount information
 		if err != nil {
-			return data, err
+			return data, err // Return the error if retrieval fails
 		}
 
-		// hitung diskon
+		// Calculate the discount amount
 		var diskonAmount float64
 		if diskon.Type == "PERCENT" {
-			diskonAmount = data.Subtotal * (diskon.Amount / 100)
+			diskonAmount = data.Subtotal * (diskon.Amount / 100) // Calculate percentage-based discount
 		} else {
-			diskonAmount = diskon.Amount
+			diskonAmount = diskon.Amount // Set fixed amount discount
 		}
 
-		// terapkan diskon pada subtotal
+		// Apply the discount to the subtotal
 		data.Diskon = diskonAmount
 		data.Total = data.Subtotal - data.Diskon
 	} else {
-		data.Diskon = 0
+		data.Diskon = 0 // No discount applied
 		data.Total = data.Subtotal
 	}
 
-	// convert model.Penjualan ke modelfunc.Penjualan
+	// Convert model.Penjualan to modelfunc.Penjualan
 	penjualan := modelfunc.Penjualan{
-		Penjualan: data,
+		Penjualan: data, // Initialize with the provided sales data
 	}
 
-	// simpan data penjualan ke DB untuk mendapatkan ID yang di-generate di DB
+	// Save the sales data to the database to get the generated ID
 	err := penjualan.CreatePenjualan(repository.Mysql.DB)
 	if err != nil {
-		return data, err
+		return data, err // Return the error if saving fails
 	}
 
-	// generate kode invoice setelah data penjualan tersimpan
+	// Generate the invoice code after saving the sales data
 	data.ID = penjualan.Penjualan.ID
 	data.Kode_invoice = GenerateInvoice(data.ID)
 
-	// perbarui data penjualan dengan kode invoice yang baru di-generate
+	// Update the sales data with the newly generated invoice code
 	penjualan.Penjualan.Kode_invoice = data.Kode_invoice
 	err = penjualan.Update(repository.Mysql.DB)
 	if err != nil {
-		return data, err
+		return data, err // Return the error if updating fails
 	}
 
-	err = penjualan.Update(repository.Mysql.DB)
-	if err != nil {
-		return data, err
-	}
-
-	return penjualan.Penjualan, nil
+	return penjualan.Penjualan, nil // Return the updated sales record
 }
 
-// function untuk mendapatkan data penjualan
+// Function to get all sales data
 func GetPenjualan() ([]model.Penjualan, error) {
 	var penjualan modelfunc.Penjualan
-	penjualanList, err := penjualan.GetAll(repository.Mysql.DB)
+	penjualanList, err := penjualan.GetAll(repository.Mysql.DB) // Retrieve all sales records
 	if err != nil {
-		return nil, err
+		return nil, err // Return the error if retrieval fails
 	}
 
 	// Convert []modelfunc.Penjualan to []model.Penjualan
-	result := make([]model.Penjualan, len(penjualanList))
-	for i, pj := range penjualanList {
-		result[i] = pj.Penjualan
+	result := make([]model.Penjualan, len(penjualanList)) // Initialize a result slice
+	for i, pj := range penjualanList {                    // Iterate through the retrieved sales records
+		result[i] = pj.Penjualan // Add each record to the result slice
 	}
 
-	return result, nil
+	return result, nil // Return the slice of sales records
 }
 
-// function untuk mendapatkan data penjualan berdasarkan ID
+// Function to get sales data by ID
 func GetPenjualanByID(id uint64) (model.Penjualan, error) {
 	penjualan := modelfunc.Penjualan{
 		Penjualan: model.Penjualan{
-			ID: id,
+			ID: id, // Set the ID from the parameter
 		},
 	}
-	result, err := penjualan.GetPByID(repository.Mysql.DB)
+	result, err := penjualan.GetPByID(repository.Mysql.DB) // Retrieve the sales record by ID
 	if err != nil {
-		return model.Penjualan{}, err
+		return model.Penjualan{}, err // Return the error if retrieval fails
 	}
-	return result.Penjualan, nil
+	return result.Penjualan, nil // Return the retrieved sales record
 }

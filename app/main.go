@@ -1,66 +1,40 @@
 package main
 
 import (
-	// "fmt"
-	// "log"
-	// "projek/toko-retail/repository/config"
+	repository "projek/toko-retail/repository/config" // Import the repository package for database configuration
+	"projek/toko-retail/routes"                       // Import the routes package for setting up API routes
 
-	// "html/template"
-	// "path/filepath"
-	// "projek/toko-retail/controller"
-	repository "projek/toko-retail/repository/config"
-	"projek/toko-retail/routes"
-
-	"github.com/gofiber/fiber/v2"
-	"github.com/gofiber/template/html/v2"
-	"github.com/joho/godotenv"
-	"github.com/sirupsen/logrus"
+	"github.com/gofiber/fiber/v2" // Import Fiber for creating and managing HTTP server
+	"github.com/joho/godotenv"    // Import godotenv for loading environment variables
+	"github.com/sirupsen/logrus"  // Import logrus for logging
 )
 
+// InitEnv initializes environment variables from a .env file
 func InitEnv() {
-	err := godotenv.Load(".env")
-	if err != nil {
-		logrus.Warn("Cannot load env file, using system env")
+	err := godotenv.Load(".env") // Load environment variables from the .env file
+	if err != nil {              // Check if there was an error loading the .env file
+		logrus.Warn("Cannot load env file, using system env") // Log a warning if the .env file could not be loaded
 	}
 }
 
 func main() {
-	// Init environment
+	// Initialize environment variables
 	InitEnv()
 
-	// initial database
+	// Open a connection to the database
 	repository.OpenDB()
 
-	// app := fiber.New()
+	// Create a new Fiber application instance
+	app := fiber.New()
 
-	// templates := template.New("").Funcs(template.FuncMap{
-	// 	controller.GetBarang(),
-
-	// })
-
-	// templates = template.Must(templates.ParseGlob(filepath.Join("template", "*.html")))
-
-	// app.Renderer = fiber.HTMLRenderer(templates, nil)
-
-	// setup fiber
-	engine := html.New("./template", ".html") // Path to templates and file extension
-	app := fiber.New(fiber.Config{
-		Views: engine,
-	})
-
-	// define static file path
-	app.Static("/", "./template/home")
-	// app.Static("/barang", "./template/barang/list.html")
-	app.Static("/src", "./src")
-
-	// setup route
+	// Setup API routes
 	routes.RouteSetup(app)
 
-	// open fiber on http://localhost:3000
-	err := app.Listen(":3000")
-	if err != nil {
+	// Start the Fiber server and listen on port 3000
+	err := app.Listen(":3000") // Listen on port 3000
+	if err != nil {            // Check if there was an error starting the server
 		logrus.Fatal(
 			"Error on running fiber, ",
-			err.Error())
+			err.Error()) // Log a fatal error if the server fails to start
 	}
 }

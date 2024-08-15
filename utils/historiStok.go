@@ -4,110 +4,97 @@ import (
 	"projek/toko-retail/model"
 	repository "projek/toko-retail/repository/config"
 	"projek/toko-retail/repository/modelfunc"
+
+	"github.com/siruspen/logrus"
 )
 
-// function untuk membuat histori barang
+// Function to create a new history record for an item
 func CreateHistoriBarang(p *model.Details, keterangan string, amount int, status string) (model.Histori, error) {
-// Membuat objek histori
+	// Create a new history record
 	histori := model.Histori{
-		ID_barang:   uint(p.ID),
-		Amount:     amount,
-		Status:     status,
-		Keterangan: keterangan,
+		ID_barang:   uint(p.ID),        // Set ID_barang from the parameter p
+		Amount:      amount,            // Set amount from the parameter
+		Status:      status,            // Set status from the parameter
+		Keterangan:  keterangan,        // Set description from the parameter
 	}
 
-	// Simpan histori ke database
-	err := repository.Mysql.DB.Create(&histori).Error
+	// Save the history record to the database
+	err := repository.Mysql.DB.Create(&histori).Error // Save history to the database
 	if err != nil {
-		return model.Histori{}, err
+		return model.Histori{}, err // Return error if saving fails
 	}
 
-	return histori, nil
-
-	// histori := modelfunc.Histori{
-	// 	Histori: model.Histori{
-	// 		ID_barang:   uint(p.ID),
-	// 		Amount:      amount,
-	// 		Status:      status,
-	// 		Keterangan:  keterangan,
-	// 	},
-	// }
-
-	// // Save the history record to the database
-	// err := histori.Create(repository.Mysql.DB)
-	// if err != nil {
-	// 	return model.Histori{}, err
-	// }
-
-	// return histori.Histori, nil
+	return histori, nil // Return the newly created history record
 }
 
-// function untuk membuat histori penjualan
+// Function to create a new sales history record
 func CreateHistoriPenjualan(p *model.CreateP, keterangan string, amount int, status string) (model.Histori, error) {
 	histori := modelfunc.Histori{
 		Histori: model.Histori{
-			ID_barang:   uint(p.ID),
-			Amount:      amount,
-			Status:      status,
-			Keterangan:  keterangan,
+			ID_barang:   uint(p.ID),        // Set ID_barang from the parameter p
+			Amount:      amount,            // Set amount from the parameter
+			Status:      status,            // Set status from the parameter
+			Keterangan:  keterangan,        // Set description from the parameter
 		},
 	}
 
-	err := histori.Create(repository.Mysql.DB)
+	err := histori.Create(repository.Mysql.DB) // Save the sales history record to the database
 	if err != nil {
-		return model.Histori{}, err
+		return model.Histori{}, err // Return error if saving fails
 	}
 
-	return histori.Histori, nil
+	return histori.Histori, nil // Return the newly created history record
 }
 
-// function untuk mendapatkan data dengan ID barang
+// Function to get history records by item ID
 func GetASKMByIDBarang(idb uint64) ([]model.HistoriASKM, error) {
 	histori := modelfunc.Histori{
 		Histori: model.Histori{
-			ID_barang: uint(idb),
+			ID_barang: uint(idb), // Set ID_barang from the parameter idb
 		},
 	}
 
-	newHistory, err := histori.GetIDBarang(repository.Mysql.DB)
+	logrus.Println(idb) // Log ID_barang for debugging
+
+	newHistory, err := histori.GetIDBarang(repository.Mysql.DB) // Retrieve history records by ID_barang
 	if err != nil {
-		return nil, err
+		return nil, err // Return error if retrieval fails
 	}
 
-	var haskm []model.HistoriASKM
-	for _, h := range newHistory {
-		haskm = append(haskm, model.HistoriASKM{
-			Amount:     h.Amount,
-			Status:     h.Status,
-			Keterangan: h.Keterangan,
-			Model:      h.Model,
+	var haskm []model.HistoriASKM // Initialize a slice for the retrieved history records
+	for _, h := range newHistory { // Iterate through the retrieved history records
+		haskm = append(haskm, model.HistoriASKM{ // Add each history record to the slice
+			Amount:     h.Amount,       // Set Amount from the history record
+			Status:     h.Status,       // Set Status from the history record
+			Keterangan: h.Keterangan,   // Set Description from the history record
+			Model:      h.Model,        // Set Model from the history record
 		})
 	}
 
-	return haskm, nil
+	return haskm, nil // Return the slice of retrieved history records
 }
 
-// function untuk mendapatkan data
+// Function to get history records by item ID
 func GetASK(idb uint64) ([]model.HistoriASK, error) {
 	histori := modelfunc.Histori{
 		Histori: model.Histori{
-			ID_barang: uint(idb),
+			ID_barang: uint(idb), // Set ID_barang from the parameter idb
 		},
 	}
 
-	newHistory, err := histori.GetIDBarang(repository.Mysql.DB)
+	newHistory, err := histori.GetIDBarang(repository.Mysql.DB) // Retrieve history records by ID_barang
 	if err != nil {
-		return nil, err
+		return nil, err // Return error if retrieval fails
 	}
 
-	var hask []model.HistoriASK
-	for _, h := range newHistory {
-		hask = append(hask, model.HistoriASK{
-			Amount:     h.Amount,
-			Status:     h.Status,
-			Keterangan: h.Keterangan,
+	var hask []model.HistoriASK // Initialize a slice for the retrieved history records
+	for _, h := range newHistory { // Iterate through the retrieved history records
+		hask = append(hask, model.HistoriASK{ // Add each history record to the slice
+			Amount:     h.Amount,       // Set Amount from the history record
+			Status:     h.Status,       // Set Status from the history record
+			Keterangan: h.Keterangan,   // Set Description from the history record
 		})
 	}
 
-	return hask, nil
+	return hask, nil // Return the slice of retrieved history records
 }

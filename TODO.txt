@@ -1,12 +1,15 @@
 yang kurang :
 
 1. UI WEBSITE BATAL😂
-2. Barang [Get All : AMAN,
-    Get Detail By ID : created_at dan updated_at ga bener,
-    POST : udah mau kepost, tapi histori_stok nya ga kepost,
-
+2. Barang [ Get All: AMAN,
+            Get Detail By ID: AMAN
+            POST: AMAN
+            Put By ID: AMAN
+            Put Stok By ID: AMAN
+            KESIMPULAN : AMAN SEMUA COK (15 agustus 2024 11.33)
 ]
 3. Penjualan [DONE 100%]
 4. Kode Diskon [DONE 100%]
 
 Server Error😂
+Website Hancur😂

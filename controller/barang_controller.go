@@ -5,95 +5,51 @@ import (
 	"projek/toko-retail/utils"
 	"strconv"
 
-	"github.com/gofiber/fiber/v2"
-	"github.com/sirupsen/logrus"
+	"github.com/gofiber/fiber/v2"   // Import Fiber for handling HTTP requests and responses
+	"github.com/sirupsen/logrus"   // Import logrus for logging
 )
 
+// Function to create a new Barang (item)
 func CreateBarang(c *fiber.Ctx) error {
+	// Define a request struct for adding new Barang
 	type AddBarangReq struct {
-		Kode       string  `json:"kode_barang"`
-		Nama       string  `json:"nama_barang"`
-		HargaPokok float64 `json:"harga_pokok"`
-		HargaJual  float64 `json:"harga_jual"`
-		Tipe       string  `json:"tipe_barang"`
-		Stok       uint    `json:"stok"`
-		CreatedBy  string  `json:"created_by"`
+		Kode       string  `json:"kode_barang"`   // Barang code
+		Nama       string  `json:"nama_barang"`   // Barang name
+		HargaPokok float64 `json:"harga_pokok"`   // Cost price
+		HargaJual  float64 `json:"harga_jual"`    // Selling price
+		Tipe       string  `json:"tipe_barang"`   // Barang type
+		Stok       uint    `json:"stok"`          // Stock quantity
+		CreateBy   string  `json:"created_by"`    // Creator's name
 		Histori    struct {
-			Amount     uint   `json:"amount"`
-			Status     string `json:"status"`
-			Keterangan string `json:"keterangan"`
-		} `json:"histori_stok"`
+			Amount     int    `json:"amount"`      // Stock change amount
+			Status     string `json:"status"`      // Stock change status
+			Keterangan string `json:"keterangan"`  // Description of the stock change
+		} `json:"histori_stok"`  // Stock history information
 	}
-	req := new(AddBarangReq)
 
+	// Parse the request body JSON into the AddBarangReq struct
+	req := new(AddBarangReq)
 	if err := c.BodyParser(req); err != nil {
+		// Handle JSON parsing errors
 		return c.Status(fiber.StatusBadRequest).
-			JSON(map[string]interface{}{
-				"message": "Invalid Body",
+			JSON(map[string]any{
+				"message": "Invalid Body",  // Response message for invalid body
 			})
 	}
-	// logrus.Info("Parsed request body successfully: ", req)
 
-	barang := model.Barang{
+	// Create the new Barang (item) in the database
+	barang, errCreateBarang := utils.CreateBarang(model.Barang{
 		KodeBarang: req.Kode,
 		Nama:       req.Nama,
 		HargaPokok: req.HargaPokok,
 		HargaJual:  req.HargaJual,
 		TipeBarang: req.Tipe,
 		Stok:       req.Stok,
-		CreatedBy:  req.CreatedBy,
-	}
+		CreatedBy:  req.CreateBy,
+	})
 
-	_, errCreateBarang := utils.CreateBarang(barang)
-	if errCreateBarang != nil {
-		logrus.Errorf("Terjadi error: %s\n", errCreateBarang)
-		return c.Status(fiber.StatusInternalServerError).
-			JSON(map[string]interface{}{
-				"message": "Server Error",
-			})
-	}
-	// barang, errCreateBarang := utils.CreateBarang(model.Barang{
-	// 	KodeBarang: req.Kode,
-	// 	Nama:       req.Nama,
-	// 	HargaPokok: req.HargaPokok,
-	// 	HargaJual:  req.HargaJual,
-	// 	TipeBarang: req.Tipe,
-	// 	Stok:       req.Stok,
-	// 	CreatedBy:  req.CreatedBy,
-	// })
-
-	// if errCreateBarang != nil {
-	// 	logrus.Printf("Terjadi error : %s\n", errCreateBarang.Error())
-	// 	return c.Status(fiber.StatusInternalServerError).
-	// 		JSON(map[string]any{
-	// 			"message": "Server Error",
-	// 		})
-	// }
-
-	_, errCreateASK := utils.GetASK(barang.ID)
-	if errCreateASK != nil {
-		logrus.Errorf("Error getting ASK: %s", errCreateASK)
-		return c.Status(fiber.StatusInternalServerError).JSON(
-			map[string]interface{}{
-				"message": "Server Error",
-			},
-		)
-	}
-
-	if req.Histori.Amount == 0 && req.Histori.Status == "" && req.Histori.Keterangan == "" {
-		logrus.Error("Error: Histori is empty")
-		return c.Status(fiber.StatusBadRequest).JSON(map[string]interface{}{
-			"message": "Invalid Histori Data",
-		})
-	}
-
-	histori := model.HistoriASKM{
-		Amount:     int(req.Histori.Amount),
-		Status:     req.Histori.Status,
-		Keterangan: req.Histori.Keterangan,
-	}
-
-	_, errCreateHistori := utils.CreateHistoriBarang(&model.Details{
+	// Create a history record for the new Barang (item)
+	utils.CreateHistoriBarang(&model.Details{
 		ID:         barang.ID,
 		KodeBarang: req.Kode,
 		Nama:       req.Nama,
@@ -101,140 +57,122 @@ func CreateBarang(c *fiber.Ctx) error {
 		HargaJual:  req.HargaJual,
 		TipeBarang: req.Tipe,
 		Stok:       req.Stok,
-		CreatedBy:  req.CreatedBy,
-		Histori:    []model.HistoriASKM{histori},
+		CreatedBy:  req.CreateBy,
+		Histori:    []model.HistoriASKM{},
 	}, req.Histori.Keterangan, int(req.Stok), req.Histori.Status)
 
-	if errCreateHistori != nil {
-		logrus.Errorf("Error creating histori: %s", errCreateHistori)
+	// Handle errors during creation and respond accordingly
+	if errCreateBarang != nil {
+		logrus.Printf("Error occurred: %s\n", errCreateBarang.Error())
 		return c.Status(fiber.StatusInternalServerError).
-			JSON(map[string]interface{}{
-				"message": "Server Error",
+			JSON(map[string]any{
+				"message": "Server Error",  // Response message for server error
 			})
 	}
 
+	// Return the newly created Barang's ID and kode_barang
 	return c.Status(fiber.StatusOK).
-		JSON(map[string]interface{}{
-			"message": "Successfully added item",
-			"data":    barang,
+		JSON(map[string]any{
+			"id":          barang.ID,
+			"kode_barang": barang.KodeBarang,
 		})
-	// return c.Status(fiber.StatusOK).JSON(
-	// 	map[string]any{
-	// 		"message": "tes",
-	// 	},
-	// )
 }
 
+// Function to retrieve all Barang (items) from the database
 func GetBarang(c *fiber.Ctx) error {
+	// Retrieve all Barang (items) from the database
 	dataBarang, err := utils.GetBarang()
 	if err != nil {
-		logrus.Error("Gagal dalam mengambil list Barang: ", err.Error())
+		// Handle errors during retrieval
+		logrus.Error("Failed to retrieve Barang list: ", err.Error())
 		return c.Status(fiber.StatusInternalServerError).JSON(
 			map[string]any{
-				"message": "server error",
+				"message": "Server Error",  // Response message for server error
 			},
 		)
 	}
+
+	// Return all Barang data
 	return c.Status(fiber.StatusOK).JSON(
 		map[string]any{
 			"data":    dataBarang,
-			"message": "Success Get All Barang",
+			"message": "Success Get All Barang",  // Success message
 		},
 	)
 }
 
-func GetJSONBarang(c *fiber.Ctx) error {
-	dataBarang, err := utils.GetBarang()
-	if err != nil {
-		logrus.Error("Gagal dalam mengambil list Barang: ", err.Error())
-		return c.Status(fiber.StatusInternalServerError).JSON(
-			map[string]any{
-				"message": "server error",
-			},
-		)
-	}
-	return c.Status(fiber.StatusOK).JSON(
-		map[string]any{
-			"barang": dataBarang,
-		},
-	)
-}
-
-func AdminGetBarang(c *fiber.Ctx) error {
-	dataBarang, err := utils.GetBarang()
-	if err != nil {
-		logrus.Error("Gagal dalam mengambil list Barang: ", err.Error())
-		return c.Status(fiber.StatusInternalServerError).JSON(
-			map[string]any{
-				"message": "server error",
-			},
-		)
-	}
-	return c.Status(fiber.StatusOK).JSON(
-		map[string]any{
-			"data":  dataBarang,
-			"title": "Daftar Barang",
-		},
-	)
-}
-
+// Function to retrieve a specific Barang (item) by its ID
 func GetBarangByID(c *fiber.Ctx) error {
+	// Find Barang's ID from Params
 	barangID, err := strconv.Atoi(c.Params("id"))
 	if err != nil {
+		// Handle invalid ID format
 		return c.Status(fiber.StatusBadRequest).JSON(
 			map[string]interface{}{
-				"message": "Invalid ID",
+				"message": "Invalid ID",  // Response message for invalid ID
 			},
 		)
 	}
 
+	// Check if there is an item with that ID
 	dataBarang, err := utils.GetBarangByID(uint64(barangID))
 	if err != nil {
+		// Handle case where record is not found
 		if err.Error() == "record not found" {
 			return c.Status(fiber.StatusNotFound).JSON(
 				map[string]interface{}{
-					"message": "ID not found",
+					"message": "ID not found",  // Response message for ID not found
 				},
 			)
 		}
 
+		// Handle other errors
 		return c.Status(fiber.StatusInternalServerError).JSON(
 			map[string]interface{}{
-				"message": "Server Error",
+				"message": err.Error(),  // Response message with error details
 			},
 		)
 	}
 
+	// Return the details of the Barang
 	return c.Status(fiber.StatusOK).JSON(
 		map[string]interface{}{
 			"data":    dataBarang,
-			"message": "Success",
+			"message": "Success",  // Success message
 		},
 	)
 }
 
+// Function to update Barang (item) by ID
 func UpdateBarang(c *fiber.Ctx) error {
+	// Find Barang's ID from Params
 	barangID, err := strconv.Atoi(c.Params("id"))
 	if err != nil {
+		// Handle invalid ID format
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"message": "Invalid ID",
+			"message": "Invalid ID",  // Response message for invalid ID
 		})
 	}
 
+	// Parse the request body JSON into the Barang model
 	var updatedBarang model.Barang
 	if err := c.BodyParser(&updatedBarang); err != nil {
+		// Handle JSON parsing errors
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"message": "Invalid request body",
+			"message": "Invalid request body",  // Response message for invalid body
 		})
 	}
 
+	// Update the Barang in the database
 	dataBarang, err := utils.UpdateBarang(uint(barangID), updatedBarang)
 	if err != nil {
+		// Handle errors during update
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"message": "failed to update item",
+			"message": "Failed to update item",  // Response message for update failure
 		})
 	}
 
+	// Return the updated Barang's ID
 	return c.Status(fiber.StatusOK).JSON(
 		map[string]any{
 			"id": dataBarang.ID,
@@ -242,61 +180,41 @@ func UpdateBarang(c *fiber.Ctx) error {
 	)
 }
 
-func DeleteBarang(c *fiber.Ctx) error {
-	barangID, err := strconv.Atoi(c.Params("id"))
-	if err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(
-			map[string]any{
-				"message": "Invalid ID",
-			},
-		)
-	}
-
-	err = utils.DeleteBarang(uint64(barangID))
-	if err != nil {
-		if err.Error() == "record not found" {
-			return c.Status(fiber.StatusNotFound).JSON(
-				map[string]any{
-					"message": "ID not found",
-				},
-			)
-		}
-	}
-
-	return c.Status(fiber.StatusOK).JSON(map[string]any{
-		"message": "Deleted Successfully",
-	},
-	)
-}
-
+// Function to update stock of Barang (item) by ID
 func UpdateStok(c *fiber.Ctx) error {
+	// Convert params to find ID
 	barangID, err := strconv.Atoi(c.Params("id"))
 	if err != nil {
+		// Handle invalid ID format
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"message": "Invalid ID",
+			"message": "Invalid ID",  // Response message for invalid ID
 		})
 	}
 
+	// Define a new request struct for stock and history
 	var requestData struct {
-		Stok        uint          `json:"stok"`
-		HistoriStok model.Histori `json:"histori_stok"`
+		Stok        uint          `json:"stok"`         // New stock quantity
+		HistoriStok model.Histori `json:"histori_stok"` // Stock history information
 	}
 
+	// Parse the request body JSON into the struct
 	if err := c.BodyParser(&requestData); err != nil {
+		// Handle JSON parsing errors
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"message": "Invalid request body",
+			"message": "Invalid request body",  // Response message for invalid body
 		})
 	}
 
 	// Retrieve the existing Barang to update it
 	existingBarang, err := utils.GetBarangByID(uint64(barangID))
 	if err != nil {
+		// Handle errors during retrieval
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"message": "Failed to retrieve item",
+			"message": "Failed to retrieve item",  // Response message for retrieval failure
 		})
 	}
 
-	// Update only the fields provided in the request
+	// Update the stock of the Barang
 	existingBarang.Stok = requestData.Stok
 
 	// Update the Barang in the database
@@ -311,19 +229,22 @@ func UpdateStok(c *fiber.Ctx) error {
 	}
 	updatedBarang, err = utils.UpdateBarang(uint(existingBarang.ID), updatedBarang)
 	if err != nil {
+		// Handle errors during update
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"message": "Failed to update item",
+			"message": "Failed to update item",  // Response message for update failure
 		})
 	}
 
 	// Create the history record
-	newHistori, err := utils.CreateHistoriBarang(&existingBarang, requestData.HistoriStok.Keterangan, requestData.HistoriStok.Amount, requestData.HistoriStok.Status)
+	newHistori, err := utils.CreateHistoriBarang(existingBarang, requestData.HistoriStok.Keterangan, requestData.HistoriStok.Amount, requestData.HistoriStok.Status)
 	if err != nil {
+		// Handle errors during history creation
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"message": "Failed to create history record",
+			"message": "Failed to create history record",  // Response message for history creation failure
 		})
 	}
 
+	// Return the updated stock and history information
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{
 		"id":          updatedBarang.ID,
 		"kode_barang": updatedBarang.KodeBarang,
@@ -336,8 +257,34 @@ func UpdateStok(c *fiber.Ctx) error {
 	})
 }
 
-func KeranjangList(c *fiber.Ctx) error {
-	return c.Render("barang/keranjang", fiber.Map{
-		"title": "Keranjang Belanja",
+// Function to soft delete a Barang (item) by ID
+func DeleteBarang(c *fiber.Ctx) error {
+	// Convert params to find ID
+	barangID, err := strconv.Atoi(c.Params("id"))
+	if err != nil {
+		// Handle invalid ID format
+		return c.Status(fiber.StatusBadRequest).JSON(
+			map[string]any{
+				"message": "Invalid ID",  // Response message for invalid ID
+			},
+		)
+	}
+
+	// Attempt to delete the Barang
+	err = utils.DeleteBarang(uint64(barangID))
+	if err != nil {
+		// Handle cases where the record is not found or other errors
+		if err.Error() == "record not found" {
+			return c.Status(fiber.StatusNotFound).JSON(
+				map[string]any{
+					"message": "ID not found",  // Response message for ID not found
+				},
+			)
+		}
+	}
+
+	// Return confirmation of successful deletion
+	return c.Status(fiber.StatusOK).JSON(map[string]any{
+		"message": "Deleted Successfully",  // Response message for successful deletion
 	})
 }
